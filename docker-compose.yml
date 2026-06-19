@@ -1,0 +1,83 @@
+# docker-compose.yml — Sistema de Chamados
+#
+# Dois serviços em rede Docker isolada (chamados_net):
+#   db  → MariaDB 11, porta interna, dados persistidos em volume
+#   api → Flask/Gunicorn, exposta APENAS para o loopback do host (:8001)
+#
+# O Nginx no host recebe HTTPS externo e redireciona para :8001.
+# Nenhuma porta do MariaDB fica acessível de fora do VPS.
+#
+# Para subir:  docker compose up -d --build
+# Para parar:  docker compose down
+
+services:
+
+  # ── Banco de dados ────────────────────────────────────────
+  db:
+    image: mariadb:11
+    container_name: chamados-db
+    restart: unless-stopped
+
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE:      ${DB_NAME}
+      MARIADB_USER:          ${DB_USER}
+      MARIADB_PASSWORD:      ${DB_PASSWORD}
+
+    volumes:
+      # Dados persistidos entre reinicializações e deploys
+      - chamados_db_data:/var/lib/mysql
+      # Schema executado automaticamente na primeira inicialização do banco
+      - ./backend/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+
+    networks:
+      - chamados_net
+
+    # Aguarda o MariaDB estar de fato pronto para aceitar conexões
+    # antes de permitir que o container da API suba.
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 30s
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Backend Flask ─────────────────────────────────────────
+  api:
+    # O contexto de build é a pasta backend/ — o Dockerfile está lá
+    build: ./backend
+    container_name: chamados-api
+    restart: unless-stopped
+
+    # Exposta APENAS no loopback do host.
+    # Porta 8001 escolhida para não conflitar com o ConnecTea (8000).
+    ports:
+      - "127.0.0.1:8001:8001"
+
+    environment:
+      # "db" é o nome do serviço acima, que funciona como hostname
+      # dentro da rede chamados_net.
+      DB_HOST:         db
+      DB_PORT:         3306
+      DB_USER:         ${DB_USER}
+      DB_PASSWORD:     ${DB_PASSWORD}
+      DB_NAME:         ${DB_NAME}
+      # Domínios autorizados pelo CORS (o frontend no Vercel)
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+    networks:
+      - chamados_net
+
+# ── Volumes ───────────────────────────────────────────────────
+volumes:
+  chamados_db_data:
+
+# ── Rede isolada ──────────────────────────────────────────────
+# Separada da rede do ConnecTea — os containers não se enxergam.
+networks:
+  chamados_net:
+    driver: bridge

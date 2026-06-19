@@ -1,0 +1,15 @@
+# Dependências Python do Sistema de Chamados
+# Instale com: pip install -r requirements.txt
+
+# Driver MariaDB/MySQL puro em Python (substitui sqlite3 built-in)
+pymysql>=1.1.0
+
+# Carrega variáveis do arquivo .env automaticamente
+python-dotenv>=1.0.0
+
+# Backend web (necessário apenas para api.py / versão REST)
+flask>=3.0.0
+flask-cors>=4.0.0
+
+# Servidor WSGI para produção (substitui o servidor de dev do Flask)
+gunicorn>=21.2.0
