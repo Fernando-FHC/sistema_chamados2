@@ -197,8 +197,9 @@ export default function Dashboard() {
                     nameKey="status"
                     cx="50%" cy="50%"
                     outerRadius={80}
+                    labelLine={false}
                     label={({ status, percent }) =>
-                      `${status} ${(percent * 100).toFixed(0)}%`
+                      percent > 0 ? `${status} ${(percent * 100).toFixed(0)}%` : ''
                     }
                   >
                     {dados.por_status.map((entry) => (
