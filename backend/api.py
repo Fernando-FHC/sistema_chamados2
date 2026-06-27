@@ -1,13 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Backend Flask do Sistema de Chamados.
-
-Expõe uma API REST consumida pelo frontend React. A autenticação é feita
-por token: ao fazer login, o servidor gera um token aleatório e o armazena
-em memória. Cada requisição subsequente deve incluir o token no cabeçalho
-"Authorization: Bearer <token>".
 """
-
 import secrets
 import sys
 import os
@@ -29,7 +23,6 @@ from repositorios import (
 # --------------------------------------------------------------------
 # Inicialização
 # --------------------------------------------------------------------
-
 app = Flask(__name__)
 
 _origens_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173")
@@ -82,7 +75,6 @@ repo_usuario     = UsuarioRepositorio(_conn, _conexao_bd)
 # --------------------------------------------------------------------
 # Helpers de autenticação
 # --------------------------------------------------------------------
-
 def _usuario_do_token():
     auth = request.headers.get("Authorization", "")
     if not auth.startswith("Bearer "):
@@ -120,7 +112,6 @@ def requer_admin(f):
 # --------------------------------------------------------------------
 # Serializadores
 # --------------------------------------------------------------------
-
 def s_categoria(c):
     return {"id_categoria": c.id_categoria, "nome": c.nome, "descricao": c.descricao or ""}
 
@@ -151,7 +142,6 @@ def s_usuario(u):
 # --------------------------------------------------------------------
 # Rotas: Autenticação
 # --------------------------------------------------------------------
-
 @app.route("/api/login", methods=["POST"])
 def login():
     dados = request.get_json() or {}
@@ -183,7 +173,6 @@ def me():
 # --------------------------------------------------------------------
 # Rotas: Categorias
 # --------------------------------------------------------------------
-
 @app.route("/api/categorias", methods=["GET"])
 @requer_login
 def listar_categorias():
@@ -234,7 +223,6 @@ def excluir_categoria(id):
 # --------------------------------------------------------------------
 # Rotas: Técnicos
 # --------------------------------------------------------------------
-
 @app.route("/api/tecnicos", methods=["GET"])
 @requer_login
 def listar_tecnicos():
@@ -283,7 +271,6 @@ def excluir_tecnico(id):
 # --------------------------------------------------------------------
 # Rotas: Solicitantes
 # --------------------------------------------------------------------
-
 @app.route("/api/solicitantes", methods=["GET"])
 @requer_login
 def listar_solicitantes():
@@ -332,7 +319,6 @@ def excluir_solicitante(id):
 # --------------------------------------------------------------------
 # Rotas: Chamados
 # --------------------------------------------------------------------
-
 @app.route("/api/chamados", methods=["GET"])
 @requer_login
 def listar_chamados():
@@ -409,7 +395,6 @@ def excluir_chamado(id):
 # --------------------------------------------------------------------
 # Rotas: Usuários
 # --------------------------------------------------------------------
-
 @app.route("/api/usuarios", methods=["GET"])
 @requer_admin
 def listar_usuarios():
@@ -466,7 +451,6 @@ def excluir_usuario(id):
 # Rota: Dashboard
 # Usa _cursor() via repo_chamado para garantir reconexão automática
 # --------------------------------------------------------------------
-
 @app.route("/api/dashboard", methods=["GET"])
 @requer_admin
 def dashboard():
