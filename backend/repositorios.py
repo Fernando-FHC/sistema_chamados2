@@ -2,19 +2,7 @@
 """
 Módulo com as classes de repositório, responsáveis por toda a
 manutenção (CRUD) das tabelas do banco de dados.
-
-A classe RepositorioBase é abstrata (módulo abc) e define o
-"contrato" que todo repositório deve seguir: criar, listar, buscar
-por id, atualizar e excluir. Cada tabela tem seu próprio repositório
-concreto, que implementa esse contrato de um jeito específico
-(isso é o conceito de polimorfismo).
-
-O método _cursor() em RepositorioBase garante que a conexão está
-viva antes de abrir qualquer cursor — reconecta automaticamente se
-o MariaDB encerrou a conexão por inatividade (erros 2006/2013:
-"MySQL server has gone away" / "Lost connection").
 """
-
 import pymysql
 from abc import ABC, abstractmethod
 from datetime import datetime
@@ -32,8 +20,6 @@ class RepositorioBase(ABC):
 
     def _cursor(self):
         """
-        Retorna um cursor com conexão garantidamente válida.
-
         Reconecta automaticamente se o MariaDB encerrou a conexão
         por inatividade (2006: MySQL server has gone away /
         2013: Lost connection during query).
@@ -193,8 +179,7 @@ class SolicitanteRepositorio(RepositorioBase):
 
 class ChamadoRepositorio(RepositorioBase):
     """
-    Repositório da tabela central do sistema. Além do CRUD básico,
-    contém métodos próprios do domínio (fechar_chamado, listar_por_status).
+    Repositório da tabela central do sistema.
     """
 
     CONSULTA_BASE = """
