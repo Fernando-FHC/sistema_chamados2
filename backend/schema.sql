@@ -1,30 +1,6 @@
 -- ============================================================
 --  Schema do Sistema de Chamados — MariaDB
 -- ============================================================
---
--- Como usar este arquivo:
---
---   1. Entre no MariaDB como root:
---        mariadb -u root -p
---
---   2. Crie o banco e o usuário da aplicação (faça UMA vez):
---        CREATE DATABASE chamados_db
---            CHARACTER SET utf8mb4
---            COLLATE utf8mb4_unicode_ci;
---
---        CREATE USER 'chamados'@'localhost' IDENTIFIED BY 'troque_esta_senha';
---        GRANT ALL PRIVILEGES ON chamados_db.* TO 'chamados'@'localhost';
---        FLUSH PRIVILEGES;
---        EXIT;
---
---   3. Execute este script para criar as tabelas:
---        mariadb -u chamados -p chamados_db < schema.sql
---
---   Ao rodar a aplicação pela primeira vez, os dados de exemplo
---   (categorias, técnicos, solicitantes e usuários padrão) são
---   inseridos automaticamente pelo Python (popular_dados_iniciais).
--- ============================================================
-
 USE chamados_db;
 
 -- ── categorias ──────────────────────────────────────────────
@@ -57,8 +33,6 @@ CREATE TABLE IF NOT EXISTS solicitantes (
 
 -- ── chamados ─────────────────────────────────────────────────
 -- Tabela central do sistema.
--- ENUM garante que apenas os valores definidos sejam aceitos —
--- equivalente ao CHECK do SQLite, porém nativo no MariaDB/MySQL.
 
 CREATE TABLE IF NOT EXISTS chamados (
     id_chamado      INT          PRIMARY KEY AUTO_INCREMENT,
