@@ -1,15 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Módulo com as classes de modelo (entidades) do sistema.
-
-Cada classe representa uma linha das tabelas do banco de dados.
-Seguindo o paradigma de Orientação a Objetos, os atributos ficam
-encapsulados dentro do objeto, e cada classe sabe como se exibir
-(método __str__), em vez de deixar essa lógica espalhada pelo resto
-do programa.
 """
-
-
 class Categoria:
     def __init__(self, id_categoria, nome, descricao):
         self.id_categoria = id_categoria
@@ -53,10 +45,6 @@ class Solicitante:
 class Usuario:
     """
     Representa uma conta de acesso ao sistema (login).
-
-    O campo tipo_usuario define o nível de permissão: 'Administrador'
-    tem controle total sobre o sistema, enquanto 'Usuário' só pode
-    abrir novos chamados.
     """
 
     def __init__(self, id_usuario, nome_usuario, senha_hash, salt, tipo_usuario, nome_completo):
@@ -78,12 +66,6 @@ class Usuario:
 class Chamado:
     """
     Representa um chamado de suporte.
-
-    Os campos nome_categoria, nome_solicitante e nome_tecnico são
-    auxiliares, usados apenas para exibição (são preenchidos a partir
-    de um JOIN no banco), e não existem como colunas na tabela
-    "chamados" — eles existem em "categorias", "solicitantes" e
-    "tecnicos", respectivamente.
     """
 
     def __init__(
