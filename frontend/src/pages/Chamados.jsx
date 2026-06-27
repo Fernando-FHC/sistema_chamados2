@@ -1,11 +1,6 @@
 /**
  * Página de Chamados.
- *
- * Administradores têm controle total: abrir, editar, fechar e excluir.
- * Usuários comuns só podem abrir novos chamados (sem atribuir técnico)
- * e visualizar a listagem — os botões de ação não aparecem para eles.
  */
-
 import { useState, useEffect } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -25,7 +20,6 @@ import { apiChamados, apiCategorias, apiTecnicos, apiSolicitantes } from '../api
 import { useAuth } from '../context/AuthContext.jsx'
 
 // ---- Esquema Zod ----
-
 const schema = z.object({
   titulo:        z.string().min(1, 'Título é obrigatório').max(200),
   descricao:     z.string().min(1, 'Descrição é obrigatória'),
@@ -36,7 +30,6 @@ const schema = z.object({
 })
 
 // ---- Chips coloridos para status e prioridade ----
-
 const corStatus = { Aberto: 'error', 'Em Andamento': 'warning', Fechado: 'success' }
 const corPrior  = { Alta: 'error', Média: 'warning', Baixa: 'success' }
 
@@ -62,7 +55,6 @@ export default function Chamados() {
   })
 
   // ---- Carregamento ----
-
   const carregar = async () => {
     setErroGeral('')
     try {
@@ -86,7 +78,6 @@ export default function Chamados() {
   useEffect(() => { carregar() }, [filtroStatus])
 
   // ---- Abertura do dialog ----
-
   const abrirNovo = () => {
     setEditando(null)
     reset({ titulo: '', descricao: '', prioridade: 'Média',
@@ -112,7 +103,6 @@ export default function Chamados() {
   const fecharDialog = () => setDialogAberto(false)
 
   // ---- Submit do formulário ----
-
   const onSubmit = async (dados) => {
     // Usuários comuns não podem atribuir técnico
     if (!ehAdmin) dados.id_tecnico = null
@@ -130,7 +120,6 @@ export default function Chamados() {
   }
 
   // ---- Ações de linha ----
-
   const fecharChamado = async (id) => {
     if (!window.confirm('Deseja fechar este chamado?')) return
     try {
