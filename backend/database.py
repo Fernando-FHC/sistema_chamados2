@@ -5,7 +5,6 @@ criação da estrutura de tabelas do Sistema de Chamados.
 As credenciais de conexão são lidas do arquivo .env (via python-dotenv),
 para que nunca fiquem escritas diretamente no código-fonte.
 """
-
 import os
 import pymysql
 import pymysql.cursors
