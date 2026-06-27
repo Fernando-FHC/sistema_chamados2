@@ -1,19 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Módulo de segurança: geração e verificação de hash de senhas.
-
-Senhas nunca devem ser guardadas em texto puro no banco. Aqui, em vez
-de salvar a senha digitada pelo usuário, salvamos o resultado de uma
-função de hash (SHA-256) aplicada à senha. Um hash não pode ser
-"desfeito" para se descobrir a senha original — por isso, para
-verificar o login, recalculamos o hash da senha digitada e
-comparamos com o que está salvo no banco, em vez de comparar as
-senhas diretamente.
-
-Também usamos um "salt": um texto aleatório gerado para cada usuário
-e guardado junto com o hash. Ele é concatenado com a senha antes de
-calcular o hash. Isso garante que, mesmo que duas pessoas usem a
-mesma senha, os hashes salvos sejam diferentes.
 """
 
 import hashlib
@@ -30,7 +17,6 @@ def gerar_salt(tamanho=8):
 def gerar_hash_senha(senha: str):
     """
     Gera um salt aleatório e calcula o hash da senha (já com o salt).
-
     Retorna uma tupla (hash, salt), ambos como texto, prontos para
     serem salvos nas colunas do banco.
     """
