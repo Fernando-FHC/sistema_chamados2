@@ -1,12 +1,6 @@
 /**
  * Página de Solicitantes.
- *
- * Além do CRUD padrão, integra a API ViaCEP (viacep.com.br) — gratuita,
- * sem autenticação — para busca automática de endereço por CEP.
- * Quando o usuário digita um CEP válido de 8 dígitos, o campo
- * "Setor / Localização" é preenchido automaticamente com bairro + cidade + UF.
  */
-
 import { useState, useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -33,7 +27,6 @@ const schema = z.object({
 const VAZIO = { nome: '', setor: '', telefone: '', email: '' }
 
 // ── Hook de busca ViaCEP ─────────────────────────────────────────────
-
 function useCep(setValue) {
   const [cep, setCep]                     = useState('')
   const [buscandoCep, setBuscandoCep]     = useState(false)
@@ -58,7 +51,7 @@ function useCep(setValue) {
       if (data.erro) { setErroCep('CEP não encontrado.'); return }
 
       // Preenche o campo "setor" com localização obtida do CEP
-      const localizacao = [data.bairro, data.localidade, data.uf]
+      const localizacao = [data.logradouro, data.complemento, data.bairro, data.localidade, data.uf]
         .filter(Boolean).join(' — ')
       setValue('setor', localizacao, { shouldDirty: true })
       setCepEncontrado(true)
