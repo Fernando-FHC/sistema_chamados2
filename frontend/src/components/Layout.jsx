@@ -1,12 +1,6 @@
 /**
  * Layout principal da aplicação (pós-login).
- *
- * Usa o componente Drawer do MUI para a barra lateral e o AppBar
- * para o cabeçalho. Os itens do menu mudam de acordo com o perfil
- * do usuário logado (Administrador vê todas as páginas; Usuário só
- * vê Chamados).
  */
-
 import { useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import {
