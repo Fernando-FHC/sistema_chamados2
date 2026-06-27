@@ -7,10 +7,6 @@ terminal e delega a manutenção dos dados para os repositórios. Antes
 de mostrar qualquer menu, é necessário fazer login; o menu exibido
 depois muda de acordo com o perfil da conta (Administrador tem
 controle total, Usuário só pode abrir chamados).
-
-Todas as entradas do usuário passam por funções auxiliares de
-leitura que validam o conteúdo, para que o programa nunca encerre de
-forma abrupta por causa de uma digitação errada.
 """
 
 import pymysql.err
@@ -28,7 +24,6 @@ from repositorios import (
 # --------------------------------------------------------------------
 # Funções auxiliares de leitura/validação de entrada do usuário
 # --------------------------------------------------------------------
-
 def ler_inteiro(mensagem, permitir_vazio=False):
     """Lê um número inteiro, repetindo a pergunta até que seja válido."""
     while True:
@@ -85,7 +80,6 @@ def pausar():
 # --------------------------------------------------------------------
 # Classe principal da aplicação
 # --------------------------------------------------------------------
-
 class Aplicacao:
     def __init__(self):
         self.conexao_bd = Conexao()
@@ -103,7 +97,6 @@ class Aplicacao:
         self.usuario_logado = None
 
     # ---------------- LOOP PRINCIPAL ----------------
-
     def executar(self):
         print("=" * 58)
         print(" SISTEMA DE ABERTURA, CONTROLE E FECHAMENTO DE CHAMADOS")
@@ -186,7 +179,6 @@ class Aplicacao:
                 print("Opção inválida. Tente novamente.")
 
     # ---------------- CATEGORIAS ----------------
-
     def _menu_categorias(self):
         while True:
             print("\n---------------- GERENCIAR CATEGORIAS ----------------")
@@ -251,7 +243,6 @@ class Aplicacao:
             print("Categoria não encontrada.")
 
     # ---------------- TÉCNICOS ----------------
-
     def _menu_tecnicos(self):
         while True:
             print("\n----------------- GERENCIAR TÉCNICOS -----------------")
@@ -322,7 +313,6 @@ class Aplicacao:
             print("Técnico não encontrado.")
 
     # ---------------- SOLICITANTES ----------------
-
     def _menu_solicitantes(self):
         while True:
             print("\n--------------- GERENCIAR SOLICITANTES ---------------")
@@ -397,7 +387,6 @@ class Aplicacao:
             print("Solicitante não encontrado.")
 
     # ---------------- CHAMADOS ----------------
-
     def _menu_chamados(self):
         while True:
             print("\n----------------- GERENCIAR CHAMADOS -----------------")
@@ -533,7 +522,6 @@ class Aplicacao:
             print("Chamado não encontrado.")
 
     # ---------------- USUÁRIOS (somente Administrador) ----------------
-
     def _menu_usuarios(self):
         while True:
             print("\n----------------- GERENCIAR USUÁRIOS -----------------")
