@@ -1,15 +1,6 @@
 /**
  * Dashboard (somente Administrador).
- *
- * Exibe:
- *   - Cards de totais (chamados, categorias, técnicos, solicitantes, usuários)
- *   - PieChart de chamados por status (Recharts)
- *   - BarChart de chamados por categoria (Recharts)
- *   - BarChart de chamados por prioridade (Recharts)
- *   - Widget de próximos feriados nacionais — BrasilAPI (API externa gratuita)
- *     https://brasilapi.com.br/api/feriados/v1/{ano}
  */
-
 import { useState, useEffect } from 'react'
 import {
   Grid, Card, CardContent, Typography, Box, CircularProgress, Alert,
@@ -29,7 +20,6 @@ const COR_STATUS     = { Aberto: '#f44336', 'Em Andamento': '#ff9800', Fechado: 
 const COR_PRIORIDADE = { Alta: '#f44336', Média: '#ff9800', Baixa: '#4caf50' }
 
 // ── Card de total ────────────────────────────────────────────────────
-
 function CardTotal({ label, valor, cor, icone }) {
   return (
     <Card sx={{ height: '100%' }}>
@@ -47,7 +37,6 @@ function CardTotal({ label, valor, cor, icone }) {
 }
 
 // ── Widget de feriados (BrasilAPI) ───────────────────────────────────
-
 function WidgetFeriados() {
   const [feriados, setFeriados]     = useState([])
   const [carregando, setCarregando] = useState(true)
@@ -144,7 +133,6 @@ function WidgetFeriados() {
 }
 
 // ── Dashboard principal ──────────────────────────────────────────────
-
 export default function Dashboard() {
   const [dados, setDados]           = useState(null)
   const [carregando, setCarregando] = useState(true)
