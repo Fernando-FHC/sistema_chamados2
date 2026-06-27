@@ -3,20 +3,32 @@
  *
  * Usa uma instância compartilhada do Axios configurada com a URL base
  * do servidor. O token de autenticação é adicionado automaticamente
- * aos cabeçalhos quando o usuário está logado (via AuthContext).
+ * aos cabeçalhos em tempo real antes de cada requisição.
  */
 
 import axios from 'axios'
 
-// Instância compartilhada do Axios. O AuthContext configura o cabeçalho
-// Authorization nessa instância quando o usuário faz login.
-//
-// A URL base é lida da variável de ambiente VITE_API_URL (definida em
-// ".env" localmente ou nas configurações do projeto no Vercel).
-// Se a variável não estiver definida, usa o servidor local de desenvolvimento.
+// Configuração da URL base vinda do ambiente ou fallback local
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
 })
+
+// INTERCEPTOR: Executado antes de QUALQUER requisição sair para o servidor.
+// Isso impede que requisições paralelas fiquem sem o token por atraso de render.
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token') 
+    
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`
+    }
+    
+    return config
+  },
+  (error) => {
+    return Promise.reject(error)
+  }
+)
 
 // ---- Autenticação ----
 
