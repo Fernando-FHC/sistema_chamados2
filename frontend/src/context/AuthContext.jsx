@@ -1,9 +1,5 @@
 /**
  * Contexto de autenticação.
- *
- * Armazena o usuário logado e o token no localStorage do navegador,
- * e configura o cabeçalho Authorization da instância Axios para que
- * todas as requisições subsequentes já incluam o token.
  */
 
 import { createContext, useContext, useState, useEffect } from 'react'
