@@ -2,7 +2,6 @@
 """
 Módulo de segurança: geração e verificação de hash de senhas.
 """
-
 import hashlib
 import random
 import string
