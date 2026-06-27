@@ -2,24 +2,16 @@
 """
 Módulo responsável pela conexão com o banco de dados MariaDB e pela
 criação da estrutura de tabelas do Sistema de Chamados.
-
 As credenciais de conexão são lidas do arquivo .env (via python-dotenv),
 para que nunca fiquem escritas diretamente no código-fonte.
-
-Dependências externas (instalar com pip):
-    pip install pymysql python-dotenv
 """
 
 import os
-
 import pymysql
 import pymysql.cursors
 from dotenv import load_dotenv
-
 from seguranca import gerar_hash_senha
 
-# Carrega as variáveis definidas no arquivo .env, se existir.
-# Variáveis já definidas no ambiente do sistema operacional têm prioridade.
 load_dotenv()
 
 
@@ -29,20 +21,33 @@ class Conexao:
     def __init__(self):
         self.conexao = None
 
-    def conectar(self):
-        """Abre a conexão com o MariaDB usando as variáveis de ambiente."""
-        self.conexao = pymysql.connect(
+    def _params(self):
+        return dict(
             host=os.getenv("DB_HOST", "localhost"),
             port=int(os.getenv("DB_PORT", 3306)),
             user=os.getenv("DB_USER", "chamados"),
             password=os.getenv("DB_PASSWORD", ""),
             database=os.getenv("DB_NAME", "chamados_db"),
             charset="utf8mb4",
-            # DictCursor faz fetchone() e fetchall() retornarem dicionários
-            # ({"campo": valor}) em vez de tuplas, mantendo a mesma sintaxe
-            # de acesso por nome de coluna que usávamos com o sqlite3.Row.
             cursorclass=pymysql.cursors.DictCursor,
         )
+
+    def conectar(self):
+        """Abre a conexão com o MariaDB usando as variáveis de ambiente."""
+        self.conexao = pymysql.connect(**self._params())
+        return self.conexao
+
+    def reconectar(self):
+        """
+        Fecha a conexão atual (se existir) e abre uma nova.
+        Chamado pelo RepositorioBase ao detectar conexão morta
+        (2006/2013: MySQL server has gone away).
+        """
+        try:
+            self.conexao.close()
+        except Exception:
+            pass
+        self.conexao = pymysql.connect(**self._params())
         return self.conexao
 
     def desconectar(self) -> None:
@@ -51,17 +56,8 @@ class Conexao:
             self.conexao.close()
 
     def criar_tabelas(self) -> None:
-        """Cria as tabelas do sistema, caso ainda não existam.
-
-        Diferenças em relação ao SQLite:
-        - Cada CREATE TABLE é executado individualmente (não existe executescript).
-        - AUTO_INCREMENT no lugar de AUTOINCREMENT.
-        - ENUM no lugar de CHECK para valores fixos — mais idiomático no MariaDB.
-        - ENGINE=InnoDB é obrigatório para suporte a chaves estrangeiras.
-        - charset=utf8mb4 suporta emojis e caracteres especiais do português.
-        """
+        """Cria as tabelas do sistema, caso ainda não existam."""
         cursor = self.conexao.cursor()
-
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS categorias (
                 id_categoria INT          PRIMARY KEY AUTO_INCREMENT,
@@ -69,7 +65,6 @@ class Conexao:
                 descricao    TEXT
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         """)
-
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS tecnicos (
                 id_tecnico    INT          PRIMARY KEY AUTO_INCREMENT,
@@ -79,7 +74,6 @@ class Conexao:
                 email         VARCHAR(150)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         """)
-
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS solicitantes (
                 id_solicitante INT          PRIMARY KEY AUTO_INCREMENT,
@@ -89,7 +83,6 @@ class Conexao:
                 email          VARCHAR(150)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         """)
-
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS chamados (
                 id_chamado      INT          PRIMARY KEY AUTO_INCREMENT,
@@ -112,7 +105,6 @@ class Conexao:
                     REFERENCES tecnicos(id_tecnico)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         """)
-
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS usuarios (
                 id_usuario    INT          PRIMARY KEY AUTO_INCREMENT,
@@ -124,15 +116,10 @@ class Conexao:
                 nome_completo VARCHAR(150)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         """)
-
         self.conexao.commit()
 
     def popular_dados_iniciais(self) -> None:
-        """Insere registros de exemplo apenas se as tabelas estiverem vazias.
-
-        Diferença do SQLite: fetchone()[0] não funciona com DictCursor —
-        é necessário nomear a coluna com AS e acessar pelo nome.
-        """
+        """Insere registros de exemplo apenas se as tabelas estiverem vazias."""
         cursor = self.conexao.cursor()
 
         cursor.execute("SELECT COUNT(*) AS total FROM categorias")
@@ -140,9 +127,9 @@ class Conexao:
             cursor.executemany(
                 "INSERT INTO categorias (nome, descricao) VALUES (%s, %s)",
                 [
-                    ("Informática",      "Problemas com computadores, redes e sistemas"),
-                    ("Telefonia",        "Problemas com ramais, telefones e centrais"),
-                    ("Manutenção Geral", "Reparos elétricos, hidráulicos e estruturais"),
+                    ("Informática",       "Problemas com computadores, redes e sistemas"),
+                    ("Telefonia",         "Problemas com ramais, telefones e centrais"),
+                    ("Manutenção Geral",  "Reparos elétricos, hidráulicos e estruturais"),
                 ],
             )
 

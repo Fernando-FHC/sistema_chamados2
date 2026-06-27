@@ -2,13 +2,10 @@
 """
 Backend Flask do Sistema de Chamados.
 
-Expõe uma API REST consumida pelo frontend React. A autenticação é
-feita por token: ao fazer login, o servidor gera um token aleatório e
-o armazena em memória. Cada requisição subsequente deve incluir o
-token no cabeçalho "Authorization: Bearer <token>".
-
-Para iniciar: python api.py
-O servidor rodará em http://localhost:5000
+Expõe uma API REST consumida pelo frontend React. A autenticação é feita
+por token: ao fazer login, o servidor gera um token aleatório e o armazena
+em memória. Cada requisição subsequente deve incluir o token no cabeçalho
+"Authorization: Bearer <token>".
 """
 
 import secrets
@@ -16,10 +13,8 @@ import sys
 import os
 
 from flask import Flask, request, jsonify, g
-from flask_cors import CORS
 from functools import wraps
 
-# Garante que os módulos do sistema de chamados estejam no path
 sys.path.insert(0, os.path.dirname(__file__))
 
 from database import Conexao
@@ -37,36 +32,58 @@ from repositorios import (
 
 app = Flask(__name__)
 
-# ALLOWED_ORIGINS: lista de domínios separados por vírgula.
-# Em desenvolvimento: http://localhost:5173
-# Em produção: o domínio do Vercel (ex: https://sistema-chamados.vercel.app)
-# Defina no arquivo .env ou como variável de ambiente no servidor.
 _origens_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173")
-ALLOWED_ORIGINS = [o.strip() for o in _origens_env.split(",")]
-CORS(app, origins=ALLOWED_ORIGINS)
+ALLOWED_ORIGINS = [o.strip() for o in _origens_env.split(",") if o.strip()]
+
+
+def _origem_permitida(origem: str) -> bool:
+    return not ALLOWED_ORIGINS or origem in ALLOWED_ORIGINS
+
+
+@app.after_request
+def adicionar_cors(response):
+    origem = request.headers.get("Origin", "")
+    if _origem_permitida(origem):
+        response.headers["Access-Control-Allow-Origin"]  = origem
+        response.headers["Access-Control-Allow-Headers"] = (
+            "Authorization, Content-Type, Accept"
+        )
+        response.headers["Access-Control-Allow-Methods"] = (
+            "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+        )
+    return response
+
+
+@app.route("/api/<path:caminho>", methods=["OPTIONS"])
+def preflight(caminho):
+    return "", 204
+
 
 # Dicionário de sessões ativas: token -> id_usuario
 sessoes: dict[str, int] = {}
 
-# Conexão única com o banco, reutilizada por todas as requisições
+# Conexão única com o banco — repositórios reconectam automaticamente
+# via _cursor() se a conexão cair por inatividade
 _conexao_bd = Conexao()
 _conexao_bd.conectar()
 _conexao_bd.criar_tabelas()
 _conexao_bd.popular_dados_iniciais()
+
+# Passa _conexao_bd (objeto Conexao) junto com a conexão pymysql,
+# para que _cursor() possa chamar _conexao_bd.reconectar() quando necessário
 _conn = _conexao_bd.conexao
 
-repo_categoria   = CategoriaRepositorio(_conn)
-repo_tecnico     = TecnicoRepositorio(_conn)
-repo_solicitante = SolicitanteRepositorio(_conn)
-repo_chamado     = ChamadoRepositorio(_conn)
-repo_usuario     = UsuarioRepositorio(_conn)
+repo_categoria   = CategoriaRepositorio(_conn, _conexao_bd)
+repo_tecnico     = TecnicoRepositorio(_conn, _conexao_bd)
+repo_solicitante = SolicitanteRepositorio(_conn, _conexao_bd)
+repo_chamado     = ChamadoRepositorio(_conn, _conexao_bd)
+repo_usuario     = UsuarioRepositorio(_conn, _conexao_bd)
 
 # --------------------------------------------------------------------
 # Helpers de autenticação
 # --------------------------------------------------------------------
 
 def _usuario_do_token():
-    """Extrai e valida o token Bearer; retorna o Usuario ou None."""
     auth = request.headers.get("Authorization", "")
     if not auth.startswith("Bearer "):
         return None
@@ -78,7 +95,6 @@ def _usuario_do_token():
 
 
 def requer_login(f):
-    """Decorator: garante que o usuário está autenticado."""
     @wraps(f)
     def wrapper(*args, **kwargs):
         usuario = _usuario_do_token()
@@ -90,7 +106,6 @@ def requer_login(f):
 
 
 def requer_admin(f):
-    """Decorator: garante que o usuário é Administrador."""
     @wraps(f)
     def wrapper(*args, **kwargs):
         usuario = _usuario_do_token()
@@ -103,7 +118,7 @@ def requer_admin(f):
     return wrapper
 
 # --------------------------------------------------------------------
-# Serializadores (objeto Python → dict JSON)
+# Serializadores
 # --------------------------------------------------------------------
 
 def s_categoria(c):
@@ -211,7 +226,7 @@ def atualizar_categoria(id):
 def excluir_categoria(id):
     try:
         if repo_categoria.excluir(id):
-            return jsonify({"mensagem": "Excluída com sucesso."})
+            return jsonify({"mensagem": "Excluído com sucesso."})
         return jsonify({"erro": "Categoria não encontrada."}), 404
     except Exception as e:
         return jsonify({"erro": str(e)}), 400
@@ -333,13 +348,12 @@ def listar_chamados():
 @requer_login
 def criar_chamado():
     d = request.get_json() or {}
-    titulo    = d.get("titulo", "").strip()
-    descricao = d.get("descricao", "").strip()
-    prioridade = d.get("prioridade", "Média")
+    titulo         = d.get("titulo", "").strip()
+    descricao      = d.get("descricao", "").strip()
+    prioridade     = d.get("prioridade", "Média")
     id_categoria   = d.get("id_categoria")
     id_solicitante = d.get("id_solicitante")
-    id_tecnico     = d.get("id_tecnico")  # pode ser None
-
+    id_tecnico     = d.get("id_tecnico")
     if not titulo or not descricao:
         return jsonify({"erro": "Título e descrição são obrigatórios."}), 400
     if not id_categoria or not id_solicitante:
@@ -356,8 +370,8 @@ def criar_chamado():
 @requer_admin
 def atualizar_chamado(id):
     d = request.get_json() or {}
-    titulo    = d.get("titulo", "").strip()
-    descricao = d.get("descricao", "").strip()
+    titulo     = d.get("titulo", "").strip()
+    descricao  = d.get("descricao", "").strip()
     prioridade = d.get("prioridade", "Média")
     id_tecnico = d.get("id_tecnico")
     if not titulo or not descricao:
@@ -393,7 +407,7 @@ def excluir_chamado(id):
         return jsonify({"erro": str(e)}), 400
 
 # --------------------------------------------------------------------
-# Rotas: Usuários (somente Administrador)
+# Rotas: Usuários
 # --------------------------------------------------------------------
 
 @app.route("/api/usuarios", methods=["GET"])
@@ -406,10 +420,10 @@ def listar_usuarios():
 @requer_admin
 def criar_usuario():
     d = request.get_json() or {}
-    nome_usuario   = d.get("nome_usuario", "").strip()
-    senha          = d.get("senha", "")
-    tipo_usuario   = d.get("tipo_usuario", "Usuário")
-    nome_completo  = d.get("nome_completo", "").strip()
+    nome_usuario  = d.get("nome_usuario", "").strip()
+    senha         = d.get("senha", "")
+    tipo_usuario  = d.get("tipo_usuario", "Usuário")
+    nome_completo = d.get("nome_completo", "").strip()
     if not nome_usuario or not senha:
         return jsonify({"erro": "Usuário (login) e senha são obrigatórios."}), 400
     try:
@@ -449,13 +463,15 @@ def excluir_usuario(id):
         return jsonify({"erro": str(e)}), 400
 
 # --------------------------------------------------------------------
-# Rota: Dashboard (somente Administrador)
+# Rota: Dashboard
+# Usa _cursor() via repo_chamado para garantir reconexão automática
 # --------------------------------------------------------------------
 
 @app.route("/api/dashboard", methods=["GET"])
 @requer_admin
 def dashboard():
-    cursor = _conn.cursor()
+    # Usa _cursor() do repositório para aproveitar a reconexão automática
+    cursor = repo_chamado._cursor()
 
     cursor.execute("SELECT status, COUNT(*) as total FROM chamados GROUP BY status")
     por_status = [{"status": r["status"], "total": r["total"]} for r in cursor.fetchall()]
