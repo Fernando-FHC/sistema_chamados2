@@ -1,11 +1,6 @@
 /**
  * Módulo de acesso à API REST do backend Flask.
- *
- * Usa uma instância compartilhada do Axios configurada com a URL base
- * do servidor. O token de autenticação é adicionado automaticamente
- * aos cabeçalhos em tempo real antes de cada requisição.
  */
-
 import axios from 'axios'
 
 // Configuração da URL base vinda do ambiente ou fallback local
@@ -14,15 +9,13 @@ export const api = axios.create({
 })
 
 // INTERCEPTOR: Executado antes de QUALQUER requisição sair para o servidor.
-// Isso impede que requisições paralelas fiquem sem o token por atraso de render.
+// Isso impede que requisições paralelas fiquem sem o token por atraso.
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token') 
-    
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`
     }
-    
     return config
   },
   (error) => {
@@ -31,7 +24,6 @@ api.interceptors.request.use(
 )
 
 // ---- Autenticação ----
-
 export const apiAuth = {
   login:  (dados)  => api.post('/login', dados),
   logout: ()       => api.post('/logout'),
@@ -39,7 +31,6 @@ export const apiAuth = {
 }
 
 // ---- Categorias ----
-
 export const apiCategorias = {
   listar:    ()           => api.get('/categorias'),
   criar:     (dados)      => api.post('/categorias', dados),
@@ -48,7 +39,6 @@ export const apiCategorias = {
 }
 
 // ---- Técnicos ----
-
 export const apiTecnicos = {
   listar:    ()           => api.get('/tecnicos'),
   criar:     (dados)      => api.post('/tecnicos', dados),
@@ -57,7 +47,6 @@ export const apiTecnicos = {
 }
 
 // ---- Solicitantes ----
-
 export const apiSolicitantes = {
   listar:    ()           => api.get('/solicitantes'),
   criar:     (dados)      => api.post('/solicitantes', dados),
@@ -66,7 +55,6 @@ export const apiSolicitantes = {
 }
 
 // ---- Chamados ----
-
 export const apiChamados = {
   listar:    (status)     => api.get('/chamados', { params: status ? { status } : {} }),
   criar:     (dados)      => api.post('/chamados', dados),
@@ -76,7 +64,6 @@ export const apiChamados = {
 }
 
 // ---- Usuários ----
-
 export const apiUsuarios = {
   listar:    ()           => api.get('/usuarios'),
   criar:     (dados)      => api.post('/usuarios', dados),
