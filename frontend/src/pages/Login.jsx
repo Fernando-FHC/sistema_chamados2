@@ -1,11 +1,6 @@
 /**
  * Página de Login.
- *
- * Valida o formulário com React Hook Form + Zod antes de enviar
- * a requisição ao backend. Em caso de erro de credenciais, exibe a
- * mensagem retornada pela API.
  */
-
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
